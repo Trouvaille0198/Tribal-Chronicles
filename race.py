@@ -3,8 +3,8 @@ class RaceBase:
     pregnancy: int = 4
     sex: bool = True
     militancy: float = 0
-    mating_probability: float = 50
-    marry_probability: float = 20
+    mating_probability: float = 0.01
+    marry_probability: float = 0.015
 
     wisdom: float = 50
     power: float = 50
@@ -19,8 +19,7 @@ class RaceBase:
 class Humankind(RaceBase):
     name: str = "Humankind"
     # 基础属性改动
-    lifetime = 70
-    lifetime_offset = 0.3
+    lifetime = 60
     pregnancy = 3
     militancy_offset = 0
     mating_offset = 0
@@ -32,5 +31,5 @@ class Humankind(RaceBase):
     openness_offset = 0.3
     charm_offset = 0
     # 特质
-    height_offset = 0
-    weight_offset = 0
+    height = 170
+    weight = 65
