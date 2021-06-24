@@ -68,12 +68,13 @@ def save(params: dict, folder, file):
     with open(folder + '\\' + file, 'a') as file_obj:
         for key, value in params.items():
             if isinstance(value, dict):
-                text = ''
+                text = []
                 for sub_key, sub_value in value.items():
-                    text = text + sub_key + ': ' + str(sub_value) + ' '
+                    text.append(sub_key + ': ' + str(sub_value))
+                text = ', '.join(text)
                 file_obj.write(key + ': ' + text + '\n')
             elif isinstance(value, list):
-                file_obj.write(key + ': ' + ''.join(value) + '\n')
+                file_obj.write(key + ': ' + ', '.join(value) + '\n')
             else:
                 file_obj.write(key + ': ' + str(value) + '\n')
 

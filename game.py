@@ -8,9 +8,10 @@ from checker import PopulationChecker
 
 class Game:
     def __init__(self):
-        self.world = World(self)
-        self.tribes = [Tribe(self) for i in range(5)]
         self.years = 0
+        self.world = World(self)
+        self.tribes = [Tribe(self) for i in range(10)]
+
         # checkers
         self.population_checker = PopulationChecker(self)
 
@@ -31,4 +32,4 @@ class Game:
 
 if __name__ == "__main__":
     game = Game()
-    game.start(200)
+    game.start(150)

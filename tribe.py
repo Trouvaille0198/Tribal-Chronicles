@@ -11,7 +11,7 @@ class Tribe:
         self.name_generator = NameGenerator()  # 一个部落维护一份名字生成器
         self.game = game
         self.name: str = ''
-        self.race: dict = {}
+        self.race = None
         self.members: list[Role] = []
         self.leader: Role = None
         self.lands: list = []
@@ -35,7 +35,7 @@ class Tribe:
 
     def initialize(self):
         self.name = self.name_generator.get_random_last_name()
-        self.race = {get_random_race(): 1}
+        self.race = get_random_race()
         self.lands.append(random.choice(self.game.world.lands))
         for land in self.lands:
             land.taken = True
