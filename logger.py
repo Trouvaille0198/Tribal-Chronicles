@@ -3,7 +3,7 @@ import time
 from loguru import logger
 
 # 日志收集器
-LOG_FOLDER = os.getcwd() + '\\logs'
+LOG_FOLDER = os.getcwd() + '\\LOGS'
 if not os.path.exists(LOG_FOLDER):
     os.mkdir(LOG_FOLDER)
 t = time.strftime("%Y_%m_%d")
