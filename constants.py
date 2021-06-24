@@ -1,12 +1,14 @@
 import numpy as np
+from race import *
 
-HEIGHT_OFFSET_BY_AGE = list(map(lambda x: x / 50, range(-50, 0, 1))) + [0 for i in range(190)] + list(
-    map(lambda x: x / 100, range(0, -50, -1)))
-WEIGHT_OFFSET_BY_AGE = list(map(lambda x: x / 50, range(-50, 0, 1))) + [0 for j in range(190)] + list(
-    map(lambda x: x / 100, range(0, -50, -1)))
-ABILITY_OFFSET_BY_AGE = list(map(lambda x: x / 50, range(-50, 0, 1))) + [0 for k in range(190)] + list(
-    map(lambda x: x / 100, range(0, -50, -1)))
-MATING_OFFSET_BY_AGE = list(map(lambda x: x / 50, range(-50, 0, 1))) + [0 for k in range(100)] + list(
-    map(lambda x: x / 100, range(0, -100, -1)))
-MARRY_OFFSET_BY_AGE = list(map(lambda x: x / 50, range(-50, 0, 1))) + [0 for k in range(100)] + list(
-    map(lambda x: x / 100, range(0, -100, -1)))
+HEIGHT_OFFSET_BY_AGE = [-0.9, -0.7, -0.3, -0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.1, -0.2, -0.25, -0.3, -0.35, -0.4]
+WEIGHT_OFFSET_BY_AGE = [-0.9, -0.7, -0.3, -0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -0.1, -0.2, -0.25, -0.3, -0.35, -0.4]
+ABILITY_OFFSET_BY_AGE = [-0.9, -0.7, -0.3, -0.1, 0, 0, 0, 0, 0, 0, 0, -0.1, -0.15, -0.2, -0.25, -0.3, -0.4, -0.5, -0.6,
+                         -0.7]
+MATING_OFFSET_BY_AGE = [-0.99, -0.9, -0.7, -0.2, 0, 0, 0, 0, 0, -0.1, -0.2, -0.2, -0.3, -0.3, -0.4, -0.4, -0.5, -0.5,
+                        -0.6, -0.7]
+MARRY_OFFSET_BY_AGE = [-0.99, -0.9, -0.7, -0.2, 0, 0, 0, 0, 0, -0.2, -0.3, -0.3, -0.4, -0.4, -0.5, -0.5, -0.6, -0.7,
+                       -0.8, -0.9]
+FERTILITY_OFFSET_BY_AGE = [-0.99, -0.95, -0.7, -0.2, 0, 0, 0, -0.2, -0.3, -0.5, -0.6, -0.7, -0.7, -0.8, -0.8, -0.8,
+                           -0.9, -0.9, -0.99]
+TRIBES_LIST = [Humankind, Elf, Dwarf, Orc]

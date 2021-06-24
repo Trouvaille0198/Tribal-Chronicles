@@ -5,6 +5,10 @@ from logger import logger
 import os
 
 
+def get_random_race() -> str:
+    return random.choice(TRIBES_LIST)
+
+
 def get_random_name() -> str:
     word_list = [chr(i) for i in range(97, 123)]
     name = ''.join([random.choice(word_list) for i in range(random.randint(3, 10))])
@@ -23,10 +27,6 @@ def get_mean_range(*value, per_range: float = 0.1) -> float:
     :return: 均值在一定范围内的偏移随机数
     """
     return sum(value) / len(value) * (1 + random.uniform(-per_range, per_range))
-
-
-def get_random_race():
-    return Humankind
 
 
 def get_offset(value, offset) -> float:
@@ -64,8 +64,8 @@ def save(params: dict, folder, file):
     base_path = os.getcwd()
     folder = base_path + '\\' + folder
     if not os.path.exists(folder):
-        os.mkdir(folder)
-    with open(folder + '\\' + file, 'w') as file_obj:
+        os.makedirs(folder)
+    with open(folder + '\\' + file, 'a') as file_obj:
         for key, value in params.items():
             if isinstance(value, dict):
                 text = ''
@@ -78,16 +78,23 @@ def save(params: dict, folder, file):
                 file_obj.write(key + ': ' + str(value) + '\n')
 
 
-def act_by_pro(pro, func, *args):
+def is_happened_by_pro(pro):
     pro = pro if pro <= 1 else 1
     pro = int(pro * 1000)
     pool = [1 for i in range(pro)] + [0 for i in range(1000 - pro)]
     flag = random.choice(pool)
+    return flag
+
+
+def act_by_pro(pro, func, *args):
+    flag = is_happened_by_pro(pro)
     if flag:
         func(*args)
 
 
 if __name__ == "__main__":
+    aa = [-0.99, -0.9, -0.6, -0.2, 0, 0, 0, 0, 0, -0.1, -0.2, -0.2, -0.3, -0.3, -0.4, -0.4, -0.5, -0.5,
+          -0.6, -0.7]
     for i in range(0, 100, 2):
-        a = offset_by_age(0.015, MARRY_OFFSET_BY_AGE, 100, i)
+        a = offset_by_age(50, aa, 100, i)
         print('years: ' + str(i) + ', pro: ' + str(a))

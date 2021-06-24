@@ -26,36 +26,65 @@ class Role:
         self.mother: Role = None
         self.father: Role = None
         self.couples: list[Role] = []
+        self.baby_unborn: list = []
         # 状态
         self.disability: list = []
         self.illness: list = []
         self.wounded_countdown: int = 0
         self.pregnant_obj: Role = None  # 怀孕对象,记录胎儿父亲
         self.pregnant_countdown: int = 0
-        self.marry_probability: float = 0
-        self.mating_probability: float = 0
-        # 属性
-        self.wisdom: float = 0
-        self.power: float = 0
-        self.fertility: float = 0
-        self.openness: float = 0
-        self.charm: float = 0
+        self.marry_probability: float = 0  # 成婚意愿 每回合做出结婚动作的概率
+        self.mating_probability: float = 0  # 交配意愿 每回合做出交配动作的概率
+        self.fertility_probability: float = 0  # 成产率
+        # 能力属性
+        self.wisdom: float = 0  # 智慧
+        self.power: float = 0  # 力量
+        self.openness: float = 0  # 开放程度
+        self.charm: float = 0  # 魅力
+        # 修正属性
+        self.real_age: int = 0
+        self.real_lifetime: int = 0
+        self.real_height: float = 0
+        self.real_weight: float = 0
+        self.real_marry_probability: float = 0
+        self.real_mating_probability: float = 0
+        self.real_fertility_probability: float = 0
+
+        self.real_wisdom: float() = 0
+        self.real_power: float() = 0
+        self.real_openness: float() = 0
+        self.real_charm: float() = 0
+        # 其他莫名其妙的统计信息
+        self.make_love_num: int = 0  # 干人次数(?
+        self.child_num: int = 0
 
     def get_full_name(self):
         return self.first_name + ' ' + self.last_name
 
+    def get_main_race(self):
+        return sorted(self.race.items(), key=lambda d: -d[1])[0][0]
+
+    def is_marry_permitted(self):
+        if self.sex == 'female' and not self.couples and not self.pregnant_obj:
+            return True
+        if self.sex == 'male' and (not self.couples or len(self.couples) < 2):
+            return True
+        return False
+
     def born(self, **params):
         self.initialize_attributes(**params)
         self.tribe.members.append(self)
+        # record
+        self.game.population_checker.born_num_yearly += 1
 
     def create_as_ancestor(self, tribe):
         race_dict = tribe.race
-        race = sorted(race_dict.items(), key=lambda d: d[1])[0][0]
+        race = sorted(race_dict.items(), key=lambda d: -d[1])[0][0]
         params = dict()
         # 基本信息
-        params['first_name'] = get_random_name()
-        params['last_name'] = get_random_name()
         params['sex'] = random.choice(['male', 'female'])
+        params['first_name'] = tribe.name_generator.get_random_first_name(params['sex'])
+        params['last_name'] = tribe.name
         params['age'] = 0
         params['race'] = race_dict
         params['lifetime'] = int(normalvariate(race.lifetime, 20))
@@ -79,10 +108,12 @@ class Role:
                                                      per_range=0.3)
         params['mating_probability'] = get_mean_range(get_offset(RaceBase.mating_probability, race.mating_offset),
                                                       per_range=0.3)
+        params['fertility_probability'] = get_mean_range(
+            get_offset(RaceBase.fertility_probability, race.fertility_offset),
+            per_range=0.3)
         # 属性
         params['wisdom'] = get_mean_range(get_offset(RaceBase.wisdom, race.wisdom_offset), per_range=0.4)
         params['power'] = get_mean_range(get_offset(RaceBase.power, race.power_offset), per_range=0.4)
-        params['fertility'] = get_mean_range(get_offset(RaceBase.fertility, race.fertility_offset), per_range=0.4)
         params['openness'] = get_mean_range(get_offset(RaceBase.openness, race.openness_offset), per_range=0.4)
         params['charm'] = get_mean_range(get_offset(RaceBase.charm, race.charm_offset), per_range=0.4)
 
@@ -93,7 +124,7 @@ class Role:
     def initialize_attributes(self, first_name, last_name, sex, age, race, lifetime, tribe, height, weight, tags,
                               titles, mother, father, couples, disability, illness, wounded_countdown,
                               pregnant_obj, pregnant_countdown, marry_probability, mating_probability,
-                              wisdom, power, fertility, openness, charm):
+                              fertility_probability, wisdom, power, openness, charm):
         """
         初始化各项属性
         """
@@ -122,22 +153,22 @@ class Role:
         self.pregnant_countdown = pregnant_countdown
         self.marry_probability = marry_probability
         self.mating_probability = mating_probability
+        self.fertility_probability = fertility_probability
         # 属性
         self.wisdom = wisdom
         self.power = power
-        self.fertility = fertility
         self.openness = openness
         self.charm = charm
 
         self.values_check()
 
     def give_birth(self):
-        baby = Role(self.game)
+        baby = self.baby_unborn[0]
         params = dict()
         # 基本信息
-        params['first_name'] = self.first_name
-        params['last_name'] = get_random_name()
         params['sex'] = random.choice(['male', 'female'])
+        params['first_name'] = self.tribe.name_generator.get_random_first_name(params['sex'])
+        params['last_name'] = self.pregnant_obj.last_name
         params['age'] = 0
         params['race'] = get_mixture_race(self.race, self.pregnant_obj.race)
         params['lifetime'] = get_mean_range(self.lifetime, self.pregnant_obj.lifetime, per_range=0.3)
@@ -157,14 +188,15 @@ class Role:
         params['wounded_countdown'] = 0
         params['pregnant_obj'] = None
         params['pregnant_countdown'] = 0
-        params['marry_probability'] = get_mean_range(self.marry_probability, self.pregnant_obj.marry_probability,
-                                                     per_range=0.2)
-        params['mating_probability'] = get_mean_range(self.mating_probability, self.pregnant_obj.mating_probability,
-                                                      per_range=0.2)
+        params['marry_probability'] = get_mean_range(self.marry_probability,
+                                                     self.pregnant_obj.marry_probability, per_range=0.2)
+        params['mating_probability'] = get_mean_range(self.mating_probability,
+                                                      self.pregnant_obj.mating_probability, per_range=0.2)
+        params['fertility_probability'] = get_mean_range(self.fertility_probability,
+                                                         self.pregnant_obj.fertility_probability, per_range=0.2)
         # 属性
         params['wisdom'] = get_mean_range(self.wisdom + self.pregnant_obj.wisdom, per_range=0.2)
         params['power'] = get_mean_range(self.power + self.pregnant_obj.power, per_range=0.2)
-        params['fertility'] = get_mean_range(self.fertility + self.pregnant_obj.fertility, per_range=0.2)
         params['openness'] = get_mean_range(self.openness + self.pregnant_obj.openness, per_range=0.2)
         params['charm'] = get_mean_range(self.charm + self.pregnant_obj.charm, per_range=0.2)
 
@@ -172,19 +204,22 @@ class Role:
 
         return baby
 
-    def get_real_attributes(self) -> dict:
+    def get_all_attributes(self) -> dict:
         params = dict()
         # 基本信息
         params['first_name'] = self.first_name
         params['last_name'] = self.last_name
         params['sex'] = self.sex
         params['age'] = self.real_age
-        params['race'] = dict(zip(map(lambda x: x.name, self.race.keys()), self.race.values()))
         params['lifetime'] = self.real_lifetime
+        params['race'] = dict(sorted(dict(zip(map(lambda x: x.name, self.race.keys()), self.race.values())).items(),
+                                     key=lambda y: -y[1]))
         params['tribe'] = self.tribe
         # 特质
-        params['height'] = self.real_height
-        params['weight'] = self.real_weight
+        params['base height'] = self.height
+        params['base weight'] = self.weight
+        params['real_height'] = self.real_height
+        params['real_weight'] = self.real_weight
         params['tags'] = self.tags
         params['titles'] = self.titles
         # 关系
@@ -197,14 +232,24 @@ class Role:
         params['wounded_countdown'] = self.wounded_countdown
         params['pregnant_obj'] = self.pregnant_obj
         params['pregnant_countdown'] = self.pregnant_countdown
-        params['marry_probability'] = self.real_marry_probability
-        params['mating_probability'] = self.real_mating_probability
+        params['base_marry_probability'] = self.marry_probability
+        params['base_mating_probability'] = self.mating_probability
+        params['base_fertility_probability'] = self.fertility_probability
         # 属性
-        params['wisdom'] = self.real_wisdom
-        params['power'] = self.real_power
-        params['fertility'] = self.real_fertility
-        params['openness'] = self.real_openness
-        params['charm'] = self.real_charm
+        params['base wisdom'] = self.wisdom
+        params['base power'] = self.power
+        params['base openness'] = self.openness
+        params['base charm'] = self.charm
+
+        params['real_marry_probability'] = self.real_marry_probability
+        params['real_mating_probability'] = self.real_mating_probability
+        params['real_fertility_probability'] = self.real_fertility_probability
+        params['real_wisdom'] = self.real_wisdom
+        params['real_power'] = self.real_power
+        params['real_openness'] = self.real_openness
+        params['real_charm'] = self.real_charm
+
+        params['make_love_num'] = self.make_love_num
         return params
 
     def values_check(self):
@@ -221,10 +266,11 @@ class Role:
                                                      self.real_age)
         self.real_marry_probability = offset_by_age(self.marry_probability, MARRY_OFFSET_BY_AGE, self.real_lifetime,
                                                     self.real_age)
+        self.real_fertility_probability = offset_by_age(self.fertility_probability, FERTILITY_OFFSET_BY_AGE,
+                                                        self.real_lifetime, self.real_age)
 
         self.real_wisdom = offset_by_age(self.wisdom, ABILITY_OFFSET_BY_AGE, self.real_lifetime, self.real_age)
         self.real_power = offset_by_age(self.power, ABILITY_OFFSET_BY_AGE, self.real_lifetime, self.real_age)
-        self.real_fertility = offset_by_age(self.fertility, ABILITY_OFFSET_BY_AGE, self.real_lifetime, self.real_age)
         self.real_openness = offset_by_age(self.openness, ABILITY_OFFSET_BY_AGE, self.real_lifetime, self.real_age)
         self.real_charm = offset_by_age(self.charm, ABILITY_OFFSET_BY_AGE, self.real_lifetime, self.real_age)
 
@@ -255,46 +301,120 @@ class Role:
 
     def dead_check(self):
         if self.real_age > self.real_lifetime:
+            self.game.population_checker.death_num_yearly += 1
             # logger.debug('{}死亡!'.format(self.get_full_name()))
+            save(self.get_all_attributes(), 'RECORDS\\ROLES', self.get_full_name() + '.txt')
             self.tribe.members.remove(self)
 
-    def pregnant(self, male_role):
-        self.pregnant_countdown = sorted(self.race.items(), key=lambda d: d[1])[0][0].pregnancy
+    def pregnant(self, male_role, is_illegitimate=False):
+        self.pregnant_countdown = self.get_main_race().pregnancy
         self.pregnant_obj = male_role
+        baby = Role(self.game)
+        if is_illegitimate:
+            baby.titles.append('私生子')
+        self.baby_unborn.append(baby)
+        # record
+        self.game.population_checker.pregnant_num_yearly += 1
+        logger.info('{}怀孕了，时年{}岁'.format(self.get_full_name(), self.real_age))
 
     def childbirth_check(self):
         if self.pregnant_obj and self.pregnant_countdown == 0:
-            baby = self.give_birth()
+            if is_happened_by_pro(self.real_fertility_probability / 1000):
+                baby = self.give_birth()
+                self.game.population_checker.born_num_yearly += 1
+                # record
+                logger.info('{}生子，时年{}岁'.format(self.get_full_name(), self.real_age))
+                # logger.info('{}出生!'.format(baby.get_full_name()))
+            else:
+                # record
+                self.game.population_checker.abortion_num_yearly += 1
+                logger.info('{}流产，时年{}岁'.format(self.get_full_name(), self.real_age))
             self.pregnant_obj = None
-            # logger.info('{}出生!'.format(baby.get_full_name()))
+            self.baby_unborn.pop(0)
 
     def get_married(self):
         """
         TODO 成婚
         """
-        roles_around_the_word = list(
-            filter(lambda x: x.sex != self.sex and x.real_age >= 16, self.game.get_all_roles()))
-        try:
-            couple = random.choice(roles_around_the_word)
-        except:
-            logger.error('random.choice爆了，数组长{}。内容如下'.format(len(roles_around_the_word)))
-            logger.info(roles_around_the_word)
-            raise ValueError('random.choice爆了，数组长{}。'.format(len(roles_around_the_word)))
-        self.couples.append(couple)
-        # logger.info('{}与{}喜结连理！时年{}和{}岁'.format(
-        #     self.get_full_name(), couple.get_full_name(), self.real_age, couple.real_age))
+        # 异种判定
+        if is_happened_by_pro(self.real_openness / 1000):
+            roles = list(
+                filter(lambda
+                           x: x.sex != self.sex and x.is_marry_permitted() and x.get_main_race() != self.get_main_race(),
+                       self.game.get_all_roles()))
+            if not roles:
+                return
+            couple = random.choice(roles)
+        else:
+            # 异族判定
+            while True:
+                roles = list(
+                    filter(lambda
+                               x: x.sex != self.sex and x.is_marry_permitted() and x.get_main_race() == self.get_main_race(),
+                           self.game.get_all_roles()))
+                if not roles:
+                    return
+                couple = random.choice(roles)
+                if couple.tribe == self.tribe or (couple.tribe != self.tribe and is_happened_by_pro(0.1)):
+                    # TODO 友好度认定
+                    break
+        charm_pro = self.real_charm / (self.real_charm + couple.tribe.get_mean_charm(self.sex))
+        if is_happened_by_pro(charm_pro):
+            # 求偶成功辣
+            self.couples.append(couple)
+            couple.couples.append(self)
+            # record
+            if self.race != couple.race:
+                self.game.population_checker.marry_diff_race_yearly += 1
+            elif self.tribe != couple.tribe:
+                self.game.population_checker.marry_diff_tribe_yearly += 1
+            else:
+                pass
+            self.game.population_checker.marry_num_yearly += 1
+            logger.info('{}与{}喜结连理！时年{}和{}岁'.format(
+                self.get_full_name(), couple.get_full_name(), self.real_age, couple.real_age))
 
     def make_love(self):
         """
         TODO 寻欢作乐
         """
-        lover = random.choice([role for tribe in self.game.tribes for role in tribe if role.sex != self.sex])
+        couples_no_preg = [couple for couple in self.couples if not couple.pregnant_obj]
+        if couples_no_preg:
+            # 若存在未怀孕的伴侣
+            lover = random.choice(couples_no_preg)
+            if self.sex == 'female':
+                act_by_pro(lover.real_fertility_probability / 1000, self.pregnant, lover, True)
+            else:
+                act_by_pro(self.real_fertility_probability / 1000, lover.pregnant, self, True)
+            # record
+            lover.make_love_num += 1
+            self.make_love_num += 1
+            self.game.population_checker.make_love_num_yearly += 1
+        else:
+            lovers = list(
+                filter(lambda x: x.sex != self.sex and not x.pregnant_obj, self.game.get_all_roles()))
+            if not lovers:
+                logger.warning('竟然没有未怀孕的人儿了？！')
+                return
+            lover = random.choice(lovers)
+            charm_pro = self.real_charm / (self.real_charm + lover.real_charm)
+            if is_happened_by_pro(charm_pro):
+                if self.sex == 'female':
+                    act_by_pro(lover.real_fertility_probability / 1000, self.pregnant, lover, True)
+                else:
+                    act_by_pro(self.real_fertility_probability / 1000, lover.pregnant, self, True)
+                # record
+                self.game.population_checker.make_love_num_yearly += 1
+                lover.make_love_num += 1
+                self.make_love_num += 1
 
     def love_check(self):
-        if (not self.couples or len(self.couples) < 2) and self.real_age >= 16:
-            act_by_pro(self.marry_probability, self.get_married)
-        if self.couples and not self.pregnant_obj:
-            act_by_pro(self.real_fertility / 1000, self.pregnant, random.choice(self.couples))
+        # 成婚判定
+        if self.is_marry_permitted():
+            act_by_pro(self.real_marry_probability / 1000, self.get_married)
+        # 交媾判定
+        if not self.pregnant_obj:
+            act_by_pro(self.real_mating_probability / 1000, self.make_love)
         self.childbirth_check()
 
     def act(self):
@@ -307,5 +427,3 @@ class Role:
         self.love_check()
         self.values_check()
         self.dead_check()
-        if self.real_age == 20:
-            save(self.get_real_attributes(), 'ROLES', str(self.id) + '.txt')
