@@ -15,10 +15,9 @@ class Tribe:
         self.members: list[Role] = []
         self.leader: Role = None
         self.lands: list = []
-        self.food: int = 0
-        self.mine: int = 0
-        self.militancy = 30  # TODO 好战度
-        self.stability = 80  # TODO 稳定度
+
+        self.militancy = 100  # TODO 好战度
+        self.stability = 800  # TODO 稳定度
         self.initialize()
 
         self.friendship: list = []  # 与其他各族的友好度
@@ -33,28 +32,116 @@ class Tribe:
     def get_members_num(self):
         return len(self.members)
 
+    def get_food_num(self):
+        result = sum([land.food for land in self.lands]) if self.lands else 0
+        return result
+
+    def get_food_consumption(self):
+        more_food_tags_num = sum([role for role in self.members if '饕餮' in role.tags])
+        less_food_tags_num = sum([role for role in self.members if '厌食' in role.tags])
+        consumption = self.get_members_num() * 2 + more_food_tags_num * 2 - less_food_tags_num * 1
+        return consumption
+
+    def get_mine_num(self):
+        result = sum([land.mine for land in self.lands]) if self.lands else 0
+        return result
+
+    def get_mine_consumption(self):
+        more_mine_tags_num = sum([role for role in self.members if '贪婪' in role.tags])
+        less_mine_tags_num = sum([role for role in self.members if '节俭' in role.tags])
+        consumption = self.get_members_num() * 2 + more_mine_tags_num * 2 - less_mine_tags_num * 1
+        return consumption
+
     def initialize(self):
         self.name = self.name_generator.get_random_last_name()
         self.race = get_random_race()
-        self.lands.append(random.choice(self.game.world.lands))
+        self.lands.append(random.choice(self.game.world.get_untaken_lands()))
         for land in self.lands:
-            land.taken = True
-        self.food = reduce(lambda x, y: x.food + y.food, self.lands)
-        self.mine = reduce(lambda x, y: x.mine + y.mine, self.lands)
-        self.members = [Role(self.game) for i in range(random.randint(5, 10))]
+            land.switch_taken_state()
+
+        self.members = [Role(self.game) for i in range(10)]
         for member in self.members:
             member.create_as_ancestor(self)
         logger.info('由 {} 组成的 {} 部族建立了'.format(self.race, self.name))
 
-    def value_check(self):
-        self.food = reduce(lambda x, y: x.food + y.food, self.lands)
-        self.mine = reduce(lambda x, y: x.mine + y.mine, self.lands)
+    def is_breed_permitted(self):
+        if self.get_food_num() < self.get_food_consumption():
+            # 当食物量不足时，停止一切繁殖相关动作
+            return False
+        else:
+            return True
+
+    def death_check(self):
+        if not self.members:
+            self.game.tribes.remove(self)
+            for land in self.lands:
+                land.switch_taken_state()
+            # record
+            logger.info('{} 部族后继无人！'.format(self.name))
 
     def act(self):
-        # TODO 部落动作
+        self.self_act()  # 部落动作
         for i in range(4):
             for member in self.members:
                 member.act()
 
     def __str__(self):
         return self.name
+
+    def self_act(self):
+        if not self.is_breed_permitted():
+            if self.game.world.get_untaken_lands():
+                # 若有地未被占领
+                if is_happened_by_pro(self.militancy / 1000):
+                    # 开战
+                    self.fight_a_war()
+                else:
+                    # 找地
+                    self.find_untaken_land()
+            else:
+                act_by_pro(self.militancy / 1000, self.fight_a_war)
+        if self.get_mine_num() < self.get_mine_consumption():
+            pass
+        self.death_check()
+
+    def fight_a_war(self):
+        target_tribes = [tribe for tribe in self.game.tribes if tribe != self and tribe.lands]
+        if not target_tribes:
+            logger.warning('世界上只有一个部落了...')
+            return
+        target_tribe = random.choice(target_tribes)
+        # 各取一半成员
+        self_roles = random.sample(self.members, int(self.get_members_num() / 2) + 1)
+        target_roles = random.sample(target_tribe.members, int(target_tribe.get_members_num() / 2) + 1)
+        # record
+        logger.info('{} 向 {} 发起战争！'.format(self.name, target_tribe.name))
+        while True:
+            self_role = random.choice(self_roles)
+            target_role = random.choice(target_roles)
+            win_role = self_role.battle(target_role)
+            if win_role == self_role:
+                target_roles.remove(target_role)
+            else:
+                self_roles.remove(self_role)
+            if not self_roles:
+                # 进攻方战败，结束
+                logger.info('进攻方 {} 战败！'.format(self.name))
+                break
+            elif not target_roles:
+                # 防御方战败，割地
+                target_land = random.choice(target_tribe.lands)
+                target_tribe.lands.remove(target_land)
+                self.lands.append(target_land)
+                logger.info('防守方 {} 战败！将土地 {} 割让'.format(target_tribe.name, target_land.name))
+                break
+            else:
+                continue
+        # record
+        self.game.population_checker.war_num_yearly += 1
+
+    def find_untaken_land(self):
+        target_land = random.choice(self.game.world.get_untaken_lands())
+        self.lands.append(target_land)
+        target_land.switch_taken_state()
+        # record
+        logger.info('{} 部族占领了 {}'.format(self.name, target_land.name))

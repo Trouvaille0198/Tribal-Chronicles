@@ -16,7 +16,7 @@ def get_random_name() -> str:
 
 
 def get_random_land_name() -> str:
-    return random.choice(['a', 'b', 'c'])
+    return random.choice(list(map(lambda x: str(x), range(10000, 99999))))
 
 
 def get_mean_range(*value, per_range: float = 0.1) -> float:

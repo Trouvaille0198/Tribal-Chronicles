@@ -20,6 +20,9 @@ class PopulationChecker:
         self.ml_diff_tribe_yearly: int = 0
         self.marry_diff_tribe_yearly: int = 0
 
+        self.war_num_yearly: int = 0
+        self.die_by_war_num_yearly: int = 0
+
     def yearly_zeroing(self):
         self.marry_num_yearly = 0
         self.pregnant_num_yearly = 0
@@ -30,6 +33,9 @@ class PopulationChecker:
 
         self.marry_diff_race_yearly = 0
         self.marry_diff_tribe_yearly = 0
+
+        self.war_num_yearly = 0
+        self.die_by_war_num_yearly = 0
 
     def record_yearly_data(self):
         params = dict()
@@ -43,13 +49,16 @@ class PopulationChecker:
         params['交媾数'] = self.make_love_num_yearly
         params['与异种结婚数'] = self.marry_diff_race_yearly
         params['与异族结婚数'] = self.marry_diff_tribe_yearly
-
+        params['与同族结婚数'] = self.marry_num_yearly - self.marry_diff_race_yearly - self.marry_diff_tribe_yearly
+        params['战争数'] = self.war_num_yearly
+        params['战死数'] = self.die_by_war_num_yearly
         self.yearly_record.append(params)
 
     def record_total_data(self):
         params = dict()
         params['纪年'] = self.game.years
-        params['总数'] = len(self.game.get_all_roles())
+        params['现存部落数'] = self.game.get_tribes_num()
+        params['生命总数'] = self.game.get_roles_num()
         params['出生数'] = sum([x['出生数'] for x in self.yearly_record])
         params['死亡数'] = sum([x['死亡数'] for x in self.yearly_record])
         params['成婚对数'] = sum([x['成婚对数'] for x in self.yearly_record])
@@ -60,6 +69,10 @@ class PopulationChecker:
 
         params['与异种结婚数'] = sum([x['与异种结婚数'] for x in self.yearly_record])
         params['与异族结婚数'] = sum([x['与异族结婚数'] for x in self.yearly_record])
+        params['与同族结婚数'] = sum([x['与同族结婚数'] for x in self.yearly_record])
+
+        params['战争数'] = sum([x['战争数'] for x in self.yearly_record])
+        params['战死数'] = sum([x['战死数'] for x in self.yearly_record])
 
         self.total_data = params
 

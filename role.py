@@ -58,6 +58,7 @@ class Role:
         # 其他莫名其妙的统计信息
         self.make_love_num: int = 0  # 干人次数(?
         self.child_num: int = 0
+        self.win_num: int = 0
 
     def get_full_name(self):
         return self.first_name + ' ' + self.last_name
@@ -88,11 +89,11 @@ class Role:
         params['birth_year'] = self.game.years
         params['age'] = 0
         params['race'] = {race: 1}
-        params['lifetime'] = int(get_mean_range(race.lifetime, 0.2))
+        params['lifetime'] = int(get_mean_range(race.lifetime, per_range=0.2))
         params['tribe'] = tribe
         # 特质
-        params['height'] = get_mean_range(race.height, 0.2)
-        params['weight'] = get_mean_range(race.weight, 0.2)
+        params['height'] = get_mean_range(race.height, per_range=0.2)
+        params['weight'] = get_mean_range(race.weight, per_range=0.2)
         params['tags'] = []  # TODO 获得先天特性
         params['titles'] = []  # TODO 头衔继承
         # 关系
@@ -120,7 +121,7 @@ class Role:
 
         self.initialize_attributes(**params)
         # logger.info('{}部族的{}已生成，其属性如下'.format(self.tribe, self.last_name))
-        logger.info(params)
+        # logger.info(params)
 
     def initialize_attributes(self, first_name, last_name, sex, birth_year, age, race, lifetime, tribe, height, weight,
                               tags,
@@ -234,12 +235,13 @@ class Role:
         # 统计属性
         params['make_love_num'] = self.make_love_num
         params['child num'] = self.child_num
+        params['win_num'] = self.win_num
         # 状态
         params['disability'] = self.disability
         params['illness'] = self.illness
-        params['wounded_countdown'] = self.wounded_countdown
-        params['pregnant_obj'] = self.pregnant_obj
-        params['pregnant_countdown'] = self.pregnant_countdown
+        # params['wounded_countdown'] = self.wounded_countdown
+        # params['pregnant_obj'] = self.pregnant_obj
+        # params['pregnant_countdown'] = self.pregnant_countdown
         params['base_marry_probability'] = self.marry_probability
         params['base_mating_probability'] = self.mating_probability
         params['base_fertility_probability'] = self.fertility_probability
@@ -249,13 +251,13 @@ class Role:
         params['base openness'] = self.openness
         params['base charm'] = self.charm
 
-        params['real_marry_probability'] = self.real_marry_probability
-        params['real_mating_probability'] = self.real_mating_probability
-        params['real_fertility_probability'] = self.real_fertility_probability
-        params['real_wisdom'] = self.real_wisdom
-        params['real_power'] = self.real_power
-        params['real_openness'] = self.real_openness
-        params['real_charm'] = self.real_charm
+        # params['real_marry_probability'] = self.real_marry_probability
+        # params['real_mating_probability'] = self.real_mating_probability
+        # params['real_fertility_probability'] = self.real_fertility_probability
+        # params['real_wisdom'] = self.real_wisdom
+        # params['real_power'] = self.real_power
+        # params['real_openness'] = self.real_openness
+        # params['real_charm'] = self.real_charm
 
         return params
 
@@ -304,7 +306,8 @@ class Role:
         pass
 
     def wounded_offset(self):
-        pass
+        if self.wounded_countdown:
+            self.real_power = get_offset(self.real_power, -0.3)
 
     def pregnant_offset(self):
         pass
@@ -314,10 +317,14 @@ class Role:
 
     def dead_check(self):
         if self.real_age > self.real_lifetime:
-            self.game.population_checker.death_num_yearly += 1
-            # logger.debug('{}死亡!'.format(self.get_full_name()))
-            save(self.get_all_attributes(), 'RECORDS\\ROLES', self.get_full_name() + '.txt')
-            self.tribe.members.remove(self)
+            self.tags.append('老死')
+            self.die()
+
+    def die(self):
+        self.game.population_checker.death_num_yearly += 1
+        # logger.debug('{}死亡!'.format(self.get_full_name()))
+        save(self.get_all_attributes(), 'RECORDS\\ROLES', self.get_full_name() + '.txt')
+        self.tribe.members.remove(self)
 
     def pregnant(self, male_role, is_illegitimate=False):
         self.pregnant_countdown = self.get_main_race().pregnancy
@@ -328,7 +335,7 @@ class Role:
         self.baby_unborn.append(baby)
         # record
         self.game.population_checker.pregnant_num_yearly += 1
-        logger.info('{}怀孕了，时年{}岁'.format(self.get_full_name(), self.real_age))
+        # logger.info('{}怀孕了，时年{}岁'.format(self.get_full_name(), self.real_age))
 
     def childbirth_check(self):
         if self.pregnant_obj and self.pregnant_countdown == 0:
@@ -338,12 +345,12 @@ class Role:
                 self.pregnant_obj.child_num += 1
                 # record
                 self.game.population_checker.born_num_yearly += 1
-                logger.info('{}生子，时年{}岁'.format(self.get_full_name(), self.real_age))
+                # logger.info('{}生子，时年{}岁'.format(self.get_full_name(), self.real_age))
                 # logger.info('{}出生!'.format(baby.get_full_name()))
             else:
                 # record
                 self.game.population_checker.abortion_num_yearly += 1
-                logger.info('{}流产，时年{}岁'.format(self.get_full_name(), self.real_age))
+                # logger.info('{}流产，时年{}岁'.format(self.get_full_name(), self.real_age))
             self.pregnant_obj = None
             self.baby_unborn.pop(0)
 
@@ -370,7 +377,7 @@ class Role:
                 if not roles:
                     return
                 couple = random.choice(roles)
-                if couple.tribe == self.tribe or (couple.tribe != self.tribe and is_happened_by_pro(0.4)):
+                if couple.tribe == self.tribe or (couple.tribe != self.tribe and is_happened_by_pro(0)):
                     # TODO 友好度认定
                     break
         charm_pro = self.real_charm / (self.real_charm + couple.tribe.get_mean_charm(self.sex))
@@ -386,8 +393,8 @@ class Role:
             else:
                 pass
             self.game.population_checker.marry_num_yearly += 1
-            logger.info('{}与{}喜结连理！时年{}和{}岁'.format(
-                self.get_full_name(), couple.get_full_name(), self.real_age, couple.real_age))
+            # logger.info('{}与{}喜结连理！时年{}和{}岁'.format(
+            # self.get_full_name(), couple.get_full_name(), self.real_age, couple.real_age))
 
     def make_love(self):
         """
@@ -409,7 +416,7 @@ class Role:
             lovers = list(
                 filter(lambda x: x.sex != self.sex and not x.pregnant_obj, self.game.get_all_roles()))
             if not lovers:
-                logger.warning('竟然没有未怀孕的人儿了？！')
+                # logger.warning('竟然没有未怀孕的人儿了？！')
                 return
             lover = random.choice(lovers)
             charm_pro = self.real_charm / (self.real_charm + lover.real_charm)
@@ -432,6 +439,40 @@ class Role:
             act_by_pro(self.real_mating_probability / 1000, self.make_love)
         self.childbirth_check()
 
+    def battle(self, target_role):
+        """
+        战斗判定
+        :param target_role: 对手
+        :return: 胜者
+        """
+        pro = self.real_power / (self.real_power + target_role.real_power)
+        if is_happened_by_pro(pro):
+            win_role = self
+            self.win_num += 1
+            target_role.hurt_check()
+        else:
+            win_role = target_role
+            target_role.win_num += 1
+            self.hurt_check()
+        return win_role
+
+    def hurt_check(self):
+        if not is_happened_by_pro(self.real_wisdom / 1000):
+            if not is_happened_by_pro(self.real_wisdom / 4000):
+                self.tags.append('战死')
+                self.die()
+                # record
+                # logger.info('{} 战死！'.format(self.get_full_name()))
+                self.game.population_checker.die_by_war_num_yearly += 1
+            else:
+                self.get_wounded()
+
+    def get_wounded(self):
+        self.wounded_countdown += random.randint(5, 20)
+        # TODO 致残判定
+        if not is_happened_by_pro(self.real_wisdom / 2000):
+            self.tags.append('残疾')
+
     def act(self):
         """
         回合开始进行操作
@@ -439,6 +480,7 @@ class Role:
         self.wounded_countdown -= 1 if self.wounded_countdown else 0
         self.pregnant_countdown -= 1 if self.pregnant_countdown else 0
         self.age += 1
-        self.love_check()
+        if self.tribe.is_breed_permitted():
+            self.love_check()
         self.values_check()
         self.dead_check()
