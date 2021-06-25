@@ -88,11 +88,11 @@ class Role:
         params['birth_year'] = self.game.years
         params['age'] = 0
         params['race'] = {race: 1}
-        params['lifetime'] = int(normalvariate(race.lifetime, 20))
+        params['lifetime'] = int(get_mean_range(race.lifetime, 0.2))
         params['tribe'] = tribe
         # 特质
-        params['height'] = normalvariate(race.height, 12)
-        params['weight'] = normalvariate(race.weight, 12)
+        params['height'] = get_mean_range(race.height, 0.2)
+        params['weight'] = get_mean_range(race.weight, 0.2)
         params['tags'] = []  # TODO 获得先天特性
         params['titles'] = []  # TODO 头衔继承
         # 关系
@@ -122,7 +122,8 @@ class Role:
         # logger.info('{}部族的{}已生成，其属性如下'.format(self.tribe, self.last_name))
         logger.info(params)
 
-    def initialize_attributes(self, first_name, last_name, sex, birth_year, age, race, lifetime, tribe, height, weight, tags,
+    def initialize_attributes(self, first_name, last_name, sex, birth_year, age, race, lifetime, tribe, height, weight,
+                              tags,
                               titles, mother, father, couples, disability, illness, wounded_countdown,
                               pregnant_obj, pregnant_countdown, marry_probability, mating_probability,
                               fertility_probability, wisdom, power, openness, charm):
@@ -354,7 +355,7 @@ class Role:
         if is_happened_by_pro(self.real_openness / 1000):
             roles = list(
                 filter(lambda
-                       x: x.sex != self.sex and x.is_marry_permitted() and x.get_main_race() != self.get_main_race(),
+                           x: x.sex != self.sex and x.is_marry_permitted() and x.get_main_race() != self.get_main_race(),
                        self.game.get_all_roles()))
             if not roles:
                 return
@@ -364,7 +365,7 @@ class Role:
             while True:
                 roles = list(
                     filter(lambda
-                           x: x.sex != self.sex and x.is_marry_permitted() and x.get_main_race() == self.get_main_race(),
+                               x: x.sex != self.sex and x.is_marry_permitted() and x.get_main_race() == self.get_main_race(),
                            self.game.get_all_roles()))
                 if not roles:
                     return
