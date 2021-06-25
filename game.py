@@ -46,6 +46,6 @@ class Game:
 if __name__ == "__main__":
     start = time.time()
     game = Game()
-    game.start(50)
+    game.start(200)
     end = time.time()
     print('总共用时 {}s'.format(end - start))

@@ -5,12 +5,12 @@ class RaceBase:
     militancy: float = 100
     stability: float = 800
     mating_probability: float = 200
-    marry_probability: float = 100
-    fertility_probability: float = 700
+    marry_probability: float = 200
+    fertility_probability: float = 600
     # 能力作为概率使用时，以千分号为单位
     wisdom: float = 500  # 绝对概率
     power: float = 500  # 相对概率
-    openness: float = 50  # 绝对概率
+    openness: float = 20  # 绝对概率
     charm: float = 500  # 相对概率
 
     height: float = 170

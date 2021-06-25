@@ -278,7 +278,7 @@ class Role:
         self.real_fertility_probability = offset_by_age(self.fertility_probability, FERTILITY_OFFSET_BY_AGE,
                                                         self.real_lifetime, self.real_age)
 
-        self.real_wisdom = offset_by_age(self.wisdom, ABILITY_OFFSET_BY_AGE, self.real_lifetime, self.real_age)
+        self.real_wisdom = offset_by_age(self.wisdom, WISDOM_OFFSET_BY_AGE, self.real_lifetime, self.real_age)
         self.real_power = offset_by_age(self.power, ABILITY_OFFSET_BY_AGE, self.real_lifetime, self.real_age)
         self.real_openness = offset_by_age(self.openness, ABILITY_OFFSET_BY_AGE, self.real_lifetime, self.real_age)
         self.real_charm = offset_by_age(self.charm, ABILITY_OFFSET_BY_AGE, self.real_lifetime, self.real_age)
@@ -364,22 +364,28 @@ class Role:
                 filter(lambda
                            x: x.sex != self.sex and x.is_marry_permitted() and x.get_main_race() != self.get_main_race(),
                        self.game.get_all_roles()))
-            if not roles:
-                return
-            couple = random.choice(roles)
         else:
-            # 异族判定
-            while True:
+            if is_happened_by_pro(0.1):
+                # 异族
                 roles = list(
                     filter(lambda
-                               x: x.sex != self.sex and x.is_marry_permitted() and x.get_main_race() == self.get_main_race(),
+                               x: x.sex != self.sex
+                                  and x.is_marry_permitted()
+                                  and x.get_main_race() == self.get_main_race()
+                                  and self.tribe != x.tribe,
                            self.game.get_all_roles()))
-                if not roles:
-                    return
-                couple = random.choice(roles)
-                if couple.tribe == self.tribe or (couple.tribe != self.tribe and is_happened_by_pro(0)):
-                    # TODO 友好度认定
-                    break
+            else:
+                # 同族
+                roles = list(
+                    filter(lambda
+                               x: x.sex != self.sex
+                                  and x.is_marry_permitted()
+                                  and x.get_main_race() == self.get_main_race()
+                                  and self.tribe == x.tribe,
+                           self.game.get_all_roles()))
+        if not roles:
+            return
+        couple = random.choice(roles)
         charm_pro = self.real_charm / (self.real_charm + couple.tribe.get_mean_charm(self.sex))
         if is_happened_by_pro(charm_pro):
             # 求偶成功辣
