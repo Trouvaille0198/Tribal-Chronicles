@@ -4,7 +4,7 @@ class RaceBase:
     sex: bool = True
     militancy: float = 100
     stability: float = 800
-    mating_probability: float = 200
+    mating_probability: float = 50
     marry_probability: float = 200
     fertility_probability: float = 600
     # 能力作为概率使用时，以千分号为单位
@@ -48,8 +48,8 @@ class Elf(RaceBase):
     marry_offset = -0.4
     fertility_offset = -0.3
     # 属性偏移
-    wisdom_offset = 0.4
-    power_offset = 0.1
+    wisdom_offset = 0.5
+    power_offset = 0.3
     openness_offset = -0.5
     charm_offset = 0.5
     # 特质
@@ -80,8 +80,8 @@ class Dwarf(RaceBase):
 class Orc(RaceBase):
     name: str = "Orc"
     # 基础属性改动
-    lifetime = 60
-    pregnancy = 10
+    lifetime = 65
+    pregnancy = 15
     sex = True
     militancy_offset = 0.5
     mating_offset = 0
@@ -89,7 +89,7 @@ class Orc(RaceBase):
     fertility_offset = 0.2
     # 属性偏移
     wisdom_offset = -0.3
-    power_offset = 0.5
+    power_offset = 0.6
     openness_offset = 0.2
     charm_offset = -0.3
     # 特质
@@ -104,12 +104,12 @@ class Dragon(RaceBase):
     pregnancy = 100
     sex = True
     militancy_offset = -0.2
-    mating_offset = -0.5
+    mating_offset = -0.6
     marry_offset = 0.3
     fertility_offset = -0.5
     # 属性偏移
     wisdom_offset = 0.5
-    power_offset = 2
+    power_offset = 2.5
     openness_offset = -0.9
     charm_offset = 0.2
     # 特质
