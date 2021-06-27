@@ -93,6 +93,15 @@ def act_by_pro(pro, func, *args):
         func(*args)
 
 
+def select_by_pro(pro_dict: dict):
+    ran = random.random()
+    sum_ = 0
+    for key, value in pro_dict.items():
+        sum_ += value
+        if ran <= sum_:
+            return key
+
+
 if __name__ == "__main__":
     aa = [-0.99, -0.9, -0.6, -0.2, 0, 0, 0, 0, 0, -0.1, -0.2, -0.2, -0.3, -0.3, -0.4, -0.4, -0.5, -0.5,
           -0.6, -0.7]
