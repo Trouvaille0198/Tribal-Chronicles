@@ -1,13 +1,12 @@
 from role import Role
-from assistance import *
+from utils.utils import *
 import random
-from functools import reduce
 from logger import logger
-from name_generator import NameGenerator
+from utils.name_generator import NameGenerator
 
 
 class Tribe:
-    def __init__(self, game):
+    def __init__(self, game, init=True):
         self.name_generator = NameGenerator()  # 一个部落维护一份名字生成器
         self.game = game
         self.name: str = ''
@@ -17,8 +16,9 @@ class Tribe:
         self.lands: list = []
 
         self.militancy = 100  # TODO 好战度
-        self.stability = 800  # TODO 稳定度
-        self.initialize()
+        self.stability = 1000  # TODO 稳定度
+        if init:
+            self.initialize()
 
         self.friendship: list = []  # 与其他各族的友好度
 
@@ -79,30 +79,17 @@ class Tribe:
             # record
             logger.info('{} 部族后继无人！'.format(self.name))
 
-    def act(self):
-        self.self_act()  # 部落动作
-        for i in range(4):
-            for member in self.members:
-                member.act()
+    def divide_check(self):
+        # TODO 稳定度调整
+        if self.get_members_num() > 200:
+            self.stability = 500
+        else:
+            self.stability = 1000
+        if not is_happened_by_pro(self.stability / 1000):
+            self.divide()
 
     def __str__(self):
         return self.name
-
-    def self_act(self):
-        if not self.is_breed_permitted():
-            if self.game.world.get_untaken_lands():
-                # 若有地未被占领
-                if is_happened_by_pro(self.militancy / 1000):
-                    # 开战
-                    self.fight_a_war()
-                else:
-                    # 找地
-                    self.find_untaken_land()
-            else:
-                act_by_pro(self.militancy / 1000, self.fight_a_war)
-        if self.get_mine_num() < self.get_mine_consumption():
-            pass
-        self.death_check()
 
     def fight_a_war(self):
         target_tribes = [tribe for tribe in self.game.tribes if tribe != self and tribe.lands]
@@ -145,3 +132,44 @@ class Tribe:
         target_land.switch_taken_state()
         # record
         logger.info('{} 部族占领了 {}'.format(self.name, target_land.name))
+
+    def divide(self):
+        new_tribe = Tribe(self.game, init=False)
+        new_tribe.race = self.race
+        new_tribe.name = self.name + '_new'
+        for _ in range(self.get_members_num() // 2):
+            member = random.choice(self.members)
+            self.members.remove(member)
+            new_tribe.members.append(member)
+            member.tribe = new_tribe
+        for _ in range(len(self.lands) // 2):
+            land = random.choice(self.lands)
+            self.lands.remove(land)
+            new_tribe.lands.append(land)
+
+        self.game.tribes.append(new_tribe)
+        # records
+        logger.info('部族{}分裂！'.format(self.name))
+
+    def self_act(self):
+        if not self.is_breed_permitted():
+            if self.game.world.get_untaken_lands():
+                # 若有地未被占领
+                if is_happened_by_pro(self.militancy / 1000):
+                    # 开战
+                    self.fight_a_war()
+                else:
+                    # 找地
+                    self.find_untaken_land()
+            else:
+                act_by_pro(self.militancy / 1000, self.fight_a_war)
+        if self.get_mine_num() < self.get_mine_consumption():
+            pass
+        self.divide_check()
+        self.death_check()
+
+    def act(self):
+        self.self_act()  # 部落动作
+        for _ in range(4):
+            for member in self.members:
+                member.act()

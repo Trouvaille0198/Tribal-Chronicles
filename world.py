@@ -1,5 +1,4 @@
-from assistance import *
-import random
+from utils.utils import *
 
 
 class Land:

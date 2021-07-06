@@ -1,11 +1,8 @@
-import random
 import time
 from world import World
 from tribe import Tribe
-from race import *
-from role import Role
 from logger import logger
-from checker import PopulationChecker
+from utils.checker import PopulationChecker
 
 
 class Game:
@@ -31,6 +28,7 @@ class Game:
         for i in range(years):
             self.years += 1
             logger.info('第{}年，{}个生命'.format(self.years, len(self.get_all_roles())))
+            print('第{}年，{}个生命'.format(self.years, len(self.get_all_roles())))
             for tribe in self.tribes:
                 tribe.act()
             # self.world.land_check()

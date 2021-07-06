@@ -10,7 +10,7 @@ class RaceBase:
     # 能力作为概率使用时，以千分号为单位
     wisdom: float = 500  # 绝对概率
     power: float = 500  # 相对概率
-    openness: float = 20  # 绝对概率
+    openness: float = 2  # 绝对概率
     charm: float = 500  # 相对概率
 
     height: float = 170
@@ -24,8 +24,8 @@ class Humankind(RaceBase):
     pregnancy = 6
     sex = True
     militancy_offset = 0
-    mating_offset = 0
-    marry_offset = 0
+    mating_offset = 0.3
+    marry_offset = 0.2
     fertility_offset = 0
     # 属性偏移
     wisdom_offset = 0
@@ -49,7 +49,7 @@ class Elf(RaceBase):
     fertility_offset = -0.3
     # 属性偏移
     wisdom_offset = 0.4
-    power_offset = 0.1
+    power_offset = -0.1
     openness_offset = -0.5
     charm_offset = 0.5
     # 特质
@@ -64,14 +64,14 @@ class Dwarf(RaceBase):
     pregnancy = 4
     sex = True
     militancy_offset = 0.1
-    mating_offset = 0.3
+    mating_offset = 0.4
     marry_offset = 0
-    fertility_offset = 0.4
+    fertility_offset = -0.5
     # 属性偏移
-    wisdom_offset = -0.3
-    power_offset = -0.2
-    openness_offset = -0.2
-    charm_offset = -0.3
+    wisdom_offset = 0
+    power_offset = 0.2
+    openness_offset = -0.3
+    charm_offset = -0.5
     # 特质
     height = 130
     weight = 60
@@ -90,7 +90,7 @@ class Orc(RaceBase):
     # 属性偏移
     wisdom_offset = -0.3
     power_offset = 0.5
-    openness_offset = 0.2
+    openness_offset = 0
     charm_offset = -0.3
     # 特质
     height = 210
@@ -105,13 +105,13 @@ class Dragon(RaceBase):
     sex = True
     militancy_offset = -0.2
     mating_offset = -0.5
-    marry_offset = 0.3
+    marry_offset = 0.4
     fertility_offset = -0.5
     # 属性偏移
-    wisdom_offset = 0.5
+    wisdom_offset = 0
     power_offset = 2
     openness_offset = -0.9
-    charm_offset = 0.2
+    charm_offset = 0.6
     # 特质
     height = 500
     weight = 285

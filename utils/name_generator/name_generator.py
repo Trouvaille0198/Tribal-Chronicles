@@ -1,13 +1,13 @@
 import random
-import os
+from pathlib import Path
 
 
 class NameGenerator:
     def __init__(self):
-        base_path = 'name_generator'
-        self.first_name_male_path = base_path + '\\' + r'first_name_male.txt'
-        self.first_name_female_path = base_path + '\\' + 'first_name_female.txt'
-        self.last_name_path = base_path + '\\' + 'last_name.txt'
+        base_path = Path.cwd() / 'utils/name_generator'
+        self.first_name_male_path = base_path / r'first_name_male.txt'
+        self.first_name_female_path = base_path / 'first_name_female.txt'
+        self.last_name_path = base_path / 'last_name.txt'
         self.first_name_male_list = []
         self.first_name_female_list = []
         self.last_name_list = []

@@ -1,7 +1,4 @@
-from logger import logger
-from race import *
-from constants import *
-from assistance import *
+from utils.utils import *
 import random
 
 
@@ -323,7 +320,7 @@ class Role:
     def die(self):
         self.game.population_checker.death_num_yearly += 1
         # logger.debug('{}死亡!'.format(self.get_full_name()))
-        save(self.get_all_attributes(), 'RECORDS\\ROLES', self.get_full_name() + '.txt')
+        save(self.get_all_attributes(), r'RECORDS/ROLES', self.get_full_name() + '.txt')
         self.tribe.members.remove(self)
 
     def pregnant(self, male_role, is_illegitimate=False):

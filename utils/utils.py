@@ -1,8 +1,7 @@
 import random
-from race import *
-from constants import *
+from configs.configs import *
+from pathlib import Path
 from logger import logger
-import os
 
 
 def get_random_race() -> str:
@@ -61,11 +60,9 @@ def get_mixture_race(mix1: dict, mix2: dict) -> dict:
 
 
 def save(params: dict, folder, file):
-    base_path = os.getcwd()
-    folder = base_path + '\\' + folder
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-    with open(folder + '\\' + file, 'a') as file_obj:
+    path = Path.cwd() / folder
+    path.mkdir(parents=True, exist_ok=True)
+    with open(str(path / file), 'a') as file_obj:
         for key, value in params.items():
             if isinstance(value, dict):
                 text = []

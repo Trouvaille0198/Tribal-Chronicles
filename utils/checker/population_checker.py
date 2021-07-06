@@ -1,5 +1,6 @@
-from assistance import *
+from utils.utils import *
 import pandas as pd
+from pathlib import Path
 
 
 class PopulationChecker:
@@ -84,11 +85,12 @@ class PopulationChecker:
         self.yearly_zeroing()
 
     def save_data(self):
-        base_path = os.getcwd()
-        folder = base_path + '\\' + 'RECORDS'
-        if not os.path.exists(folder):
-            os.makedirs(folder)
+        # base_path = os.getcwd()
+        # folder = base_path + '\\' + 'RECORDS'
+        # if not os.path.exists(folder):
+        #     os.makedirs(folder)
+        path = Path.cwd() / 'RECORDS' / 'population_record.csv'
 
         df = pd.DataFrame(self.yearly_record)
-        df.to_csv(folder + '\\population_record.csv', index=False)
+        df.to_csv(str(path), index=False)
         save(self.total_data, 'RECORDS', 'population_record.txt')
